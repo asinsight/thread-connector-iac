@@ -1,0 +1,13 @@
+# Terraform state
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# Local build artifacts
+terraform/build/
+
+# Python cache
+__pycache__/
+*.pyc
+terraform/*.zip
