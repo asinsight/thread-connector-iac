@@ -4,6 +4,12 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "profile_name" {
+  description = "AWS CLI profile name"
+  type        = string
+  default     = "threads-conn-deploy"
+}
+
 variable "project_name" {
   description = "Logical name for this Threads integration"
   type        = string

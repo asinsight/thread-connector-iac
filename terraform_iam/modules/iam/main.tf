@@ -1,13 +1,15 @@
+# IAM User for Terraform
 resource "aws_iam_user" "terraform" {
-  name = "${local.name_prefix}-terraform"
+  name = var.user_name
 
-  tags = local.tags
+  tags = var.tags
 }
 
 resource "aws_iam_access_key" "terraform" {
   user = aws_iam_user.terraform.name
 }
 
+# IAM Role for Terraform
 data "aws_iam_policy_document" "terraform_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -20,12 +22,13 @@ data "aws_iam_policy_document" "terraform_assume_role" {
 }
 
 resource "aws_iam_role" "terraform" {
-  name               = "${local.name_prefix}-terraform"
+  name               = var.role_name
   assume_role_policy = data.aws_iam_policy_document.terraform_assume_role.json
 
-  tags = local.tags
+  tags = var.tags
 }
 
+# Scoped Terraform Permissions Policy
 data "aws_iam_policy_document" "terraform_permissions" {
   # Lambda permissions
   statement {
@@ -191,18 +194,19 @@ data "aws_iam_policy_document" "terraform_permissions" {
 }
 
 resource "aws_iam_policy" "terraform" {
-  name        = "${local.name_prefix}-terraform-policy"
+  name        = var.policy_name
   description = "Scoped permissions for Terraform to manage Threads OAuth infrastructure"
   policy      = data.aws_iam_policy_document.terraform_permissions.json
 
-  tags = local.tags
+  tags = var.tags
 }
 
-resource "aws_iam_role_policy_attachment" "terraform_admin" {
+resource "aws_iam_role_policy_attachment" "terraform_policy" {
   role       = aws_iam_role.terraform.name
   policy_arn = aws_iam_policy.terraform.arn
 }
 
+# User policy to assume the Terraform role
 data "aws_iam_policy_document" "terraform_user_assume" {
   statement {
     actions   = ["sts:AssumeRole"]
@@ -211,7 +215,7 @@ data "aws_iam_policy_document" "terraform_user_assume" {
 }
 
 resource "aws_iam_user_policy" "terraform_assume" {
-  name   = "${local.name_prefix}-terraform-assume"
+  name   = "${var.user_name}-assume"
   user   = aws_iam_user.terraform.name
   policy = data.aws_iam_policy_document.terraform_user_assume.json
 }

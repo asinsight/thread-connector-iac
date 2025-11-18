@@ -11,3 +11,4 @@ terraform/build/
 __pycache__/
 *.pyc
 terraform/*.zip
+.claude/
