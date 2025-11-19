@@ -32,7 +32,7 @@ variable "lambda_function_name" {
 variable "require_api_key" {
   description = "Whether the POST method should require an API key."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "api_key_name" {
