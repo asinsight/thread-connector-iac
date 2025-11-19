@@ -1,6 +1,6 @@
 # API Gateway Module
 
-This module provisions an AWS API Gateway REST API that forwards POST requests to a Lambda function. It also supports optional API key enforcement with either a user-supplied key (via environment variables or external secret stores) or an automatically generated random key to avoid hard-coding credentials in Terraform state.
+This module provisions an AWS API Gateway REST API that forwards GET requests to a Lambda function. It also supports optional API key enforcement with either a user-supplied key (via environment variables or external secret stores) or an automatically generated random key to avoid hard-coding credentials in Terraform state.
 
 ## Inputs
 
@@ -9,7 +9,7 @@ This module provisions an AWS API Gateway REST API that forwards POST requests t
 | `api_name` | Name of the API Gateway REST API. | `string` | n/a | yes |
 | `description` | Description for the API. | `string` | `""` | no |
 | `stage_name` | Deployment stage name. | `string` | n/a | yes |
-| `resource_path_part` | Path segment that receives POST requests. | `string` | n/a | yes |
+| `resource_path_part` | Path segment that receives GET requests. | `string` | n/a | yes |
 | `lambda_invoke_arn` | Invoke ARN of the Lambda integration target. | `string` | n/a | yes |
 | `lambda_function_name` | Name of the Lambda function (for permissions). | `string` | n/a | yes |
 | `require_api_key` | Whether to enforce an API key on the method. | `bool` | `false` | no |
@@ -33,7 +33,7 @@ This module provisions an AWS API Gateway REST API that forwards POST requests t
 
 ## Getting an API key for testing
 
-If `require_api_key` is `true`, you need to include an `x-api-key` header when calling the POST endpoint. The key is available from Terraform outputs:
+If `require_api_key` is `true`, you need to include an `x-api-key` header when calling the GET endpoint. The key is available from Terraform outputs:
 
 ```sh
 terraform output -raw api_gateway_api_key_value
@@ -43,20 +43,10 @@ The invoke URL for the stage is available via `terraform output api_gateway_invo
 
 API key enforcement is disabled by default. To enable it (for example in a shared environment), set `require_api_key = true` when instantiating the module.
 
-## Example request body
+## Example request
 
-POST requests should include a JSON body that lists the ASINs to process:
+GET requests should include required parameters in the query string. For example:
 
-```json
-{
-  "asins": ["B0C5T25JJP", "B0C6QWKLP1"]
-}
-```
-
-Alternatively, a single ASIN can be provided via `asin`:
-
-```json
-{
-  "asin": "B0C5T25JJP"
-}
+```text
+https://example.execute-api.aws.com/dev/callback?user_id=alice&code=thisisthecode
 ```
