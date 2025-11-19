@@ -78,7 +78,27 @@ data "aws_iam_policy_document" "terraform_permissions" {
       "apigateway:PUT",
       "apigateway:PATCH",
       "apigateway:DELETE",
-      "apigateway:UpdateRestApiPolicy"
+      "apigateway:UpdateRestApiPolicy",
+      "apigateway:TagResource",
+      "apigateway:UntagResource",
+      # Additional actions for API Gateway resources
+      "apigateway:CreateRestApi",
+      "apigateway:DeleteRestApi",
+      "apigateway:CreateResource",
+      "apigateway:DeleteResource",
+      "apigateway:CreateMethod",
+      "apigateway:DeleteMethod",
+      "apigateway:CreateDeployment",
+      "apigateway:DeleteDeployment",
+      "apigateway:CreateStage",
+      "apigateway:DeleteStage",
+      "apigateway:UpdateStage",
+      "apigateway:CreateUsagePlan",
+      "apigateway:DeleteUsagePlan",
+      "apigateway:CreateApiKey",
+      "apigateway:DeleteApiKey",
+      "apigateway:CreateUsagePlanKey",
+      "apigateway:DeleteUsagePlanKey"
     ]
     resources = ["*"]
   }

@@ -85,7 +85,7 @@ data "aws_iam_policy_document" "callback_ssm" {
 
 resource "aws_iam_role_policy" "callback_ssm" {
   name   = "${module.callback_lambda.function_name}-ssm-access"
-  role   = module.callback_lambda.role_arn
+  role   = module.callback_lambda.role_name
   policy = data.aws_iam_policy_document.callback_ssm.json
 }
 
@@ -98,6 +98,6 @@ data "aws_iam_policy_document" "api_ssm" {
 
 resource "aws_iam_role_policy" "api_ssm" {
   name   = "${module.api_lambda.function_name}-ssm-access"
-  role   = module.api_lambda.role_arn
+  role   = module.api_lambda.role_name
   policy = data.aws_iam_policy_document.api_ssm.json
 }

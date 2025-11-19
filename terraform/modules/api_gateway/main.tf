@@ -1,8 +1,8 @@
 locals {
-  api_key_value = coalesce(
+  api_key_value = var.require_api_key ? coalesce(
     var.api_key_value,
     try(random_password.api_key[0].result, null)
-  )
+  ) : null
 }
 
 resource "random_password" "api_key" {
