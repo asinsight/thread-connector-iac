@@ -12,3 +12,4 @@ __pycache__/
 *.pyc
 terraform/*.zip
 .claude/
+test_*.py
