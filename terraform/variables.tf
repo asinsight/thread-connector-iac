@@ -22,16 +22,22 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "threads_client_id" {
-  description = "Threads OAuth client ID"
+variable "threads_client_id_parameter_name" {
+  description = "SSM parameter name storing the Threads OAuth client ID"
   type        = string
-  sensitive   = true
+  default     = "/threads/oauth/client_id"
 }
 
-variable "threads_client_secret" {
-  description = "Threads OAuth client secret"
+variable "threads_client_secret_parameter_name" {
+  description = "SSM parameter name storing the Threads OAuth client secret"
   type        = string
-  sensitive   = true
+  default     = "/threads/oauth/client_secret"
+}
+
+variable "threads_redirect_uri_parameter_name" {
+  description = "SSM parameter name storing the Threads OAuth redirect URI"
+  type        = string
+  default     = "/threads/oauth/redirect_uri"
 }
 
 variable "threads_redirect_uri" {
