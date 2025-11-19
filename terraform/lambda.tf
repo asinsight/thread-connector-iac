@@ -36,9 +36,11 @@ module "callback_lambda" {
   timeout     = 30
   memory_size = 256
 
+  layers = ["arn:aws:lambda:us-east-1:601333025120:layer:requests-layer:1"]
+
   environment_variables = {
     THREADS_TOKEN_URL        = var.threads_token_url
-    REDIRECT_URI             = var.threads_redirect_uri
+    REDIRECT_URI             = local.callback_redirect_uri
     CREDENTIALS_SECRET_NAME  = var.credentials_secret_name
     SECRET_NAME_PREFIX       = var.secret_name_prefix
   }
@@ -59,6 +61,8 @@ module "api_lambda" {
 
   timeout     = 30
   memory_size = 256
+
+  layers = ["arn:aws:lambda:us-east-1:601333025120:layer:requests-layer:1"]
 
   environment_variables = {
     THREADS_API_URL    = var.threads_api_url

@@ -22,11 +22,6 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "threads_redirect_uri" {
-  description = "Registered OAuth redirect URI"
-  type        = string
-}
-
 variable "threads_token_url" {
   description = "Threads OAuth token endpoint"
   type        = string

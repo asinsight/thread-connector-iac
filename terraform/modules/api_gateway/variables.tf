@@ -78,6 +78,12 @@ variable "endpoint_type" {
   default     = "REGIONAL"
 }
 
+variable "http_method" {
+  description = "HTTP method for the API Gateway method (GET, POST, etc.)."
+  type        = string
+  default     = "GET"
+}
+
 variable "tags" {
   description = "Tags to apply to API Gateway resources."
   type        = map(string)
