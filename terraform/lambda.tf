@@ -14,6 +14,16 @@ data "archive_file" "api" {
   output_path = "${path.root}/api.zip"
 }
 
+locals {
+  token_parameter_arn = "arn:${data.aws_partition.current.partition}:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter${var.token_base_path}/*"
+
+  oauth_parameter_arns = compact([
+    var.threads_client_id_parameter_name == null ? null : "arn:${data.aws_partition.current.partition}:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter${var.threads_client_id_parameter_name}",
+    var.threads_client_secret_parameter_name == null ? null : "arn:${data.aws_partition.current.partition}:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter${var.threads_client_secret_parameter_name}",
+    var.threads_redirect_uri_parameter_name == null ? null : "arn:${data.aws_partition.current.partition}:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter${var.threads_redirect_uri_parameter_name}",
+  ])
+}
+
 module "callback_lambda" {
   source = "./modules/lambda"
 
@@ -29,11 +39,11 @@ module "callback_lambda" {
   memory_size = 256
 
   environment_variables = {
-    THREADS_TOKEN_URL      = var.threads_token_url
-    CLIENT_ID_PARAMETER    = module.threads_param_store.parameter_names["client_id"]
-    CLIENT_SECRET_PARAMETER = module.threads_param_store.parameter_names["client_secret"]
-    REDIRECT_URI           = var.threads_redirect_uri
-    TOKEN_BASE_PATH        = var.token_base_path
+    THREADS_TOKEN_URL       = var.threads_token_url
+    CLIENT_ID_PARAMETER     = var.threads_client_id_parameter_name
+    CLIENT_SECRET_PARAMETER = var.threads_client_secret_parameter_name
+    REDIRECT_URI            = var.threads_redirect_uri
+    TOKEN_BASE_PATH         = var.token_base_path
   }
 
   tags = local.tags
@@ -54,20 +64,11 @@ module "api_lambda" {
   memory_size = 256
 
   environment_variables = {
-    THREADS_API_URL   = var.threads_api_url
-    TOKEN_BASE_PATH   = var.token_base_path
+    THREADS_API_URL = var.threads_api_url
+    TOKEN_BASE_PATH = var.token_base_path
   }
 
   tags = local.tags
-}
-
-locals {
-  token_parameter_arn = "arn:${data.aws_partition.current.partition}:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter${var.token_base_path}/*"
-  oauth_parameter_arns = [
-    module.threads_param_store.parameter_arns["client_id"],
-    module.threads_param_store.parameter_arns["client_secret"],
-    module.threads_param_store.parameter_arns["redirect_uri"],
-  ]
 }
 
 data "aws_iam_policy_document" "callback_ssm" {
