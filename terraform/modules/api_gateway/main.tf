@@ -28,10 +28,10 @@ resource "aws_api_gateway_resource" "proxy" {
   path_part   = var.resource_path_part
 }
 
-resource "aws_api_gateway_method" "post" {
+resource "aws_api_gateway_method" "any" {
   rest_api_id   = aws_api_gateway_rest_api.this.id
   resource_id   = aws_api_gateway_resource.proxy.id
-  http_method   = "POST"
+  http_method   = "ANY"
   authorization = "NONE"
 
   api_key_required = var.require_api_key
@@ -40,7 +40,7 @@ resource "aws_api_gateway_method" "post" {
 resource "aws_api_gateway_integration" "lambda" {
   rest_api_id = aws_api_gateway_rest_api.this.id
   resource_id = aws_api_gateway_resource.proxy.id
-  http_method = aws_api_gateway_method.post.http_method
+  http_method = aws_api_gateway_method.any.http_method
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
@@ -53,7 +53,7 @@ resource "aws_api_gateway_deployment" "this" {
   triggers = {
     redeployment = sha1(jsonencode([
       aws_api_gateway_integration.lambda.id,
-      aws_api_gateway_method.post.id,
+      aws_api_gateway_method.any.id,
       aws_api_gateway_resource.proxy.id
     ]))
   }
@@ -113,5 +113,5 @@ resource "aws_lambda_permission" "api_gateway" {
   action        = "lambda:InvokeFunction"
   function_name = var.lambda_function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.this.execution_arn}/*/${aws_api_gateway_method.post.http_method}${aws_api_gateway_resource.proxy.path}"
+  source_arn    = "${aws_api_gateway_rest_api.this.execution_arn}/*/${aws_api_gateway_method.any.http_method}${aws_api_gateway_resource.proxy.path}"
 }
