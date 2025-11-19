@@ -3,27 +3,22 @@
 Usage example:
   python tools/invoke_api_gateway.py --invoke-url https://example.execute-api.aws.com/dev/callback --code <auth_code> --user-id alice
 
-Pass in the Invoke URL from the API Gateway console. The script sends a JSON
-payload with ``user_id`` and optional ``code`` to mimic the Lambda proxy
-integration and prints the HTTP status plus response body so you can see when
-API Gateway returns a 502.
+Pass in the Invoke URL from the API Gateway console. The script sends a GET
+request with ``user_id`` and optional ``code`` query parameters to mimic the
+Lambda proxy integration and prints the HTTP status plus response body so you
+can see when API Gateway returns a 502.
 """
 
 import argparse
-import json
 import sys
 import urllib.error
 import urllib.request
+import urllib.parse
 
 
-def _post_json(url: str, payload: dict, timeout: int = 10) -> tuple[int, str]:
-  data = json.dumps(payload).encode()
-  request = urllib.request.Request(
-    url,
-    data=data,
-    method="POST",
-    headers={"Content-Type": "application/json"},
-  )
+def _get(url: str, params: dict, timeout: int = 10) -> tuple[int, str]:
+  query = urllib.parse.urlencode(params)
+  request = urllib.request.Request(f"{url}?{query}", method="GET")
 
   try:
     with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -40,7 +35,7 @@ def main() -> int:
   parser.add_argument(
     "--user-id",
     default="default",
-    help="User ID to include in the request body",
+    help="User ID to include as a query parameter",
   )
   parser.add_argument(
     "--code",
@@ -55,11 +50,11 @@ def main() -> int:
 
   args = parser.parse_args()
 
-  payload: dict[str, str] = {"user_id": args.user_id}
+  params: dict[str, str] = {"user_id": args.user_id}
   if args.code:
-    payload["code"] = args.code
+    params["code"] = args.code
 
-  status, body = _post_json(args.invoke_url, payload, timeout=args.timeout)
+  status, body = _get(args.invoke_url, params, timeout=args.timeout)
   print(f"Status: {status}")
   print(body)
 
