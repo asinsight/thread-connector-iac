@@ -12,7 +12,7 @@ This module provisions an AWS API Gateway REST API that forwards POST requests t
 | `resource_path_part` | Path segment that receives POST requests. | `string` | n/a | yes |
 | `lambda_invoke_arn` | Invoke ARN of the Lambda integration target. | `string` | n/a | yes |
 | `lambda_function_name` | Name of the Lambda function (for permissions). | `string` | n/a | yes |
-| `require_api_key` | Whether to enforce an API key on the method. | `bool` | `true` | no |
+| `require_api_key` | Whether to enforce an API key on the method. | `bool` | `false` | no |
 | `api_key_name` | API key name (when enabled). | `string` | `"default-api-key"` | no |
 | `api_key_description` | API key description. | `string` | `""` | no |
 | `api_key_value` | Sensitive API key value. Leave `null` to auto-generate a secure random key that can be read securely from Terraform output. | `string` | `null` | no |
@@ -33,7 +33,7 @@ This module provisions an AWS API Gateway REST API that forwards POST requests t
 
 ## Getting an API key for testing
 
-If `require_api_key` is `true` (the default), you need to include an `x-api-key` header when calling the POST endpoint. The key is available from Terraform outputs:
+If `require_api_key` is `true`, you need to include an `x-api-key` header when calling the POST endpoint. The key is available from Terraform outputs:
 
 ```sh
 terraform output -raw api_gateway_api_key_value
@@ -41,7 +41,7 @@ terraform output -raw api_gateway_api_key_value
 
 The invoke URL for the stage is available via `terraform output api_gateway_invoke_url`.
 
-To disable API key enforcement entirely (for example in a private VPC-only environment), set `require_api_key = false` when instantiating the module.
+API key enforcement is disabled by default. To enable it (for example in a shared environment), set `require_api_key = true` when instantiating the module.
 
 ## Example request body
 
