@@ -15,7 +15,7 @@ variable "stage_name" {
 }
 
 variable "resource_path_part" {
-  description = "Path part that will receive the POST requests."
+  description = "Path part that will receive the callback requests."
   type        = string
 }
 
@@ -30,9 +30,9 @@ variable "lambda_function_name" {
 }
 
 variable "require_api_key" {
-  description = "Whether the POST method should require an API key."
+  description = "Whether the method should require an API key."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "api_key_name" {
@@ -76,6 +76,12 @@ variable "endpoint_type" {
   description = "Type of endpoint configuration for the REST API."
   type        = string
   default     = "REGIONAL"
+}
+
+variable "http_method" {
+  description = "HTTP method for the API Gateway method (GET, POST, etc.)."
+  type        = string
+  default     = "GET"
 }
 
 variable "tags" {

@@ -15,6 +15,6 @@ output "api_key_id" {
 
 output "api_key_value" {
   description = "Value of the API key when one is generated."
-  value       = local.api_key_value
+  value       = var.require_api_key ? local.api_key_value : null
   sensitive   = true
 }

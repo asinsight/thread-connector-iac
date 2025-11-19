@@ -14,6 +14,14 @@ data "archive_file" "api" {
   output_path = "${path.root}/api.zip"
 }
 
+locals {
+  # Secrets Manager ARN for user access tokens
+  token_secret_arn = "arn:${data.aws_partition.current.partition}:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.secret_name_prefix}/*"
+
+  # Secrets Manager ARN for app credentials
+  credentials_secret_arn = "arn:${data.aws_partition.current.partition}:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.credentials_secret_name}"
+}
+
 module "callback_lambda" {
   source = "./modules/lambda"
 
@@ -28,12 +36,13 @@ module "callback_lambda" {
   timeout     = 30
   memory_size = 256
 
+  layers = ["arn:aws:lambda:us-east-1:601333025120:layer:requests-layer:1"]
+
   environment_variables = {
-    THREADS_TOKEN_URL      = var.threads_token_url
-    CLIENT_ID_PARAMETER    = module.threads_param_store.parameter_names["client_id"]
-    CLIENT_SECRET_PARAMETER = module.threads_param_store.parameter_names["client_secret"]
-    REDIRECT_URI           = var.threads_redirect_uri
-    TOKEN_BASE_PATH        = var.token_base_path
+    THREADS_TOKEN_URL        = var.threads_token_url
+    REDIRECT_URI             = local.callback_redirect_uri
+    CREDENTIALS_SECRET_NAME  = var.credentials_secret_name
+    SECRET_NAME_PREFIX       = var.secret_name_prefix
   }
 
   tags = local.tags
@@ -53,50 +62,58 @@ module "api_lambda" {
   timeout     = 30
   memory_size = 256
 
+  layers = ["arn:aws:lambda:us-east-1:601333025120:layer:requests-layer:1"]
+
   environment_variables = {
-    THREADS_API_URL   = var.threads_api_url
-    TOKEN_BASE_PATH   = var.token_base_path
+    THREADS_API_URL    = var.threads_api_url
+    SECRET_NAME_PREFIX = var.secret_name_prefix
   }
 
   tags = local.tags
 }
 
-locals {
-  token_parameter_arn = "arn:${data.aws_partition.current.partition}:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter${var.token_base_path}/*"
-  oauth_parameter_arns = [
-    module.threads_param_store.parameter_arns["client_id"],
-    module.threads_param_store.parameter_arns["client_secret"],
-    module.threads_param_store.parameter_arns["redirect_uri"],
-  ]
-}
-
-data "aws_iam_policy_document" "callback_ssm" {
+data "aws_iam_policy_document" "callback_secrets" {
   statement {
-    actions   = ["ssm:GetParameter", "ssm:GetParameters"]
-    resources = local.oauth_parameter_arns
+    sid = "AppCredentialsAccess"
+    actions = [
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret"
+    ]
+    resources = ["${local.credentials_secret_arn}*"]
   }
 
   statement {
-    actions   = ["ssm:PutParameter", "ssm:GetParameter", "ssm:GetParametersByPath"]
-    resources = [local.token_parameter_arn]
+    sid = "UserTokensAccess"
+    actions = [
+      "secretsmanager:CreateSecret",
+      "secretsmanager:UpdateSecret",
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:TagResource"
+    ]
+    resources = [local.token_secret_arn]
   }
 }
 
-resource "aws_iam_role_policy" "callback_ssm" {
-  name   = "${module.callback_lambda.function_name}-ssm-access"
-  role   = module.callback_lambda.role_arn
-  policy = data.aws_iam_policy_document.callback_ssm.json
+resource "aws_iam_role_policy" "callback_secrets" {
+  name   = "${module.callback_lambda.function_name}-secrets-access"
+  role   = module.callback_lambda.role_name
+  policy = data.aws_iam_policy_document.callback_secrets.json
 }
 
-data "aws_iam_policy_document" "api_ssm" {
+data "aws_iam_policy_document" "api_secrets" {
   statement {
-    actions   = ["ssm:GetParameter", "ssm:GetParametersByPath"]
-    resources = [local.token_parameter_arn]
+    sid = "SecretsManagerReadAccess"
+    actions = [
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret"
+    ]
+    resources = [local.token_secret_arn]
   }
 }
 
-resource "aws_iam_role_policy" "api_ssm" {
-  name   = "${module.api_lambda.function_name}-ssm-access"
-  role   = module.api_lambda.role_arn
-  policy = data.aws_iam_policy_document.api_ssm.json
+resource "aws_iam_role_policy" "api_secrets" {
+  name   = "${module.api_lambda.function_name}-secrets-access"
+  role   = module.api_lambda.role_name
+  policy = data.aws_iam_policy_document.api_secrets.json
 }

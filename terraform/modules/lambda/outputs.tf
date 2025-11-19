@@ -28,6 +28,11 @@ output "role_arn" {
   value       = local.lambda_role_arn
 }
 
+output "role_name" {
+  description = "IAM role name associated with the Lambda function."
+  value       = try(aws_iam_role.this[0].name, null)
+}
+
 output "log_group_name" {
   description = "CloudWatch log group name used by the function."
   value = try(

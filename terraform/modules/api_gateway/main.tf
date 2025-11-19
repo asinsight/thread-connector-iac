@@ -1,8 +1,8 @@
 locals {
-  api_key_value = coalesce(
+  api_key_value = var.require_api_key ? coalesce(
     var.api_key_value,
     try(random_password.api_key[0].result, null)
-  )
+  ) : null
 }
 
 resource "random_password" "api_key" {
@@ -28,10 +28,10 @@ resource "aws_api_gateway_resource" "proxy" {
   path_part   = var.resource_path_part
 }
 
-resource "aws_api_gateway_method" "post" {
+resource "aws_api_gateway_method" "this" {
   rest_api_id   = aws_api_gateway_rest_api.this.id
   resource_id   = aws_api_gateway_resource.proxy.id
-  http_method   = "POST"
+  http_method   = var.http_method
   authorization = "NONE"
 
   api_key_required = var.require_api_key
@@ -40,7 +40,7 @@ resource "aws_api_gateway_method" "post" {
 resource "aws_api_gateway_integration" "lambda" {
   rest_api_id = aws_api_gateway_rest_api.this.id
   resource_id = aws_api_gateway_resource.proxy.id
-  http_method = aws_api_gateway_method.post.http_method
+  http_method = aws_api_gateway_method.this.http_method
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
@@ -53,7 +53,7 @@ resource "aws_api_gateway_deployment" "this" {
   triggers = {
     redeployment = sha1(jsonencode([
       aws_api_gateway_integration.lambda.id,
-      aws_api_gateway_method.post.id,
+      aws_api_gateway_method.this.id,
       aws_api_gateway_resource.proxy.id
     ]))
   }
@@ -113,5 +113,5 @@ resource "aws_lambda_permission" "api_gateway" {
   action        = "lambda:InvokeFunction"
   function_name = var.lambda_function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.this.execution_arn}/*/${aws_api_gateway_method.post.http_method}${aws_api_gateway_resource.proxy.path}"
+  source_arn    = "${aws_api_gateway_rest_api.this.execution_arn}/*/${aws_api_gateway_method.this.http_method}${aws_api_gateway_resource.proxy.path}"
 }

@@ -4,6 +4,12 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "profile_name" {
+  description = "AWS CLI profile name"
+  type        = string
+  default     = "threads-conn-deploy"
+}
+
 variable "project_name" {
   description = "Logical name for this Threads integration"
   type        = string
@@ -16,27 +22,10 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "threads_client_id" {
-  description = "Threads OAuth client ID"
-  type        = string
-  sensitive   = true
-}
-
-variable "threads_client_secret" {
-  description = "Threads OAuth client secret"
-  type        = string
-  sensitive   = true
-}
-
-variable "threads_redirect_uri" {
-  description = "Registered OAuth redirect URI"
-  type        = string
-}
-
 variable "threads_token_url" {
   description = "Threads OAuth token endpoint"
   type        = string
-  default     = "https://api.threads.net/oauth/token"
+  default     = "https://graph.threads.net/oauth/access_token"
 }
 
 variable "threads_api_url" {
@@ -45,10 +34,16 @@ variable "threads_api_url" {
   default     = "https://api.threads.net/v1/me"
 }
 
-variable "token_base_path" {
-  description = "Base SSM Parameter Store path for per-user tokens"
+variable "credentials_secret_name" {
+  description = "Secrets Manager secret name storing the Threads app credentials (APP_ID and APP_SECRET)"
   type        = string
-  default     = "/threads/tokens"
+  default     = "threads_app_credentials"
+}
+
+variable "secret_name_prefix" {
+  description = "Prefix for Secrets Manager secret names storing user access tokens"
+  type        = string
+  default     = "threads/tokens"
 }
 
 variable "tags" {
