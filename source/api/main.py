@@ -82,7 +82,7 @@ def _get_long_lived_token_from_secrets_manager(user_id: str, secret_name_prefix:
         raise TokenNotFoundError(f"Invalid token data for user: {user_id}") from e
 
 
-def _create_threads_container(post_text: str, access_token: str) -> str:
+def _create_threads_container(post_text: str, topic_tag: str, access_token: str) -> str:
     """
     Create a Threads post container.
 
@@ -101,7 +101,8 @@ def _create_threads_container(post_text: str, access_token: str) -> str:
     post_payload = {
         "media_type": "TEXT",
         "text": post_text,
-        "access_token": access_token
+        "access_token": access_token,
+        "topic_tag": topic_tag
     }
 
     data = urllib.parse.urlencode(post_payload).encode()
@@ -217,6 +218,7 @@ def _parse_request_body(event: Dict[str, Any]) -> tuple[str, str]:
 
     user_id = parsed_body.get("user_id")
     post_text = parsed_body.get("post_text")
+    topic_tag = parsed_body.get("topic_tag")
 
     if not user_id:
         raise ValidationError("user_id is required")
@@ -229,7 +231,7 @@ def _parse_request_body(event: Dict[str, Any]) -> tuple[str, str]:
     if not user_id:
         raise ValidationError("user_id contains invalid characters")
 
-    return user_id, post_text
+    return user_id, post_text, topic_tag
 
 
 def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
@@ -247,7 +249,7 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
 
     try:
         # Step 1: Parse user_id and post_text from request body
-        user_id, post_text = _parse_request_body(event)
+        user_id, post_text, topic_tag = _parse_request_body(event)
         LOGGER.info(f"Creating post for user: {user_id}")
 
         # Step 2: Get secret name prefix from environment
@@ -259,7 +261,7 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         access_token = _get_long_lived_token_from_secrets_manager(user_id, secret_name_prefix)
 
         # Step 4: Create Threads post container
-        container_id = _create_threads_container(post_text, access_token)
+        container_id = _create_threads_container(post_text, topic_tag, access_token)
 
         # Step 5: Publish the container
         post_id = _publish_threads_container(container_id, access_token)
