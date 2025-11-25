@@ -279,7 +279,7 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
 
         # Extract user_id from params (with default fallback)
         params = event.get("queryStringParameters") or {}
-        user_id = params.get("user_id", "default")
+        user_id = params.get("state", "default")
         # Sanitize user_id to prevent injection
         user_id = "".join(c for c in user_id if c.isalnum() or c in ("-", "_"))
         if not user_id:
